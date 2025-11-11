@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Site Visit Map</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin:0; display:flex; height:100vh; }
+    #map { flex:1; min-width: 0; } /* map takes remaining space */
+    #sidebar { width:360px; max-width:40%; overflow:auto; border-left:1px solid #ddd; padding:12px; box-sizing:border-box; background:#fafafa; }
+    h1 { font-size:18px; margin:0 0 12px 0; }
+    .place { padding:8px; margin-bottom:8px; border-radius:6px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .place .title { font-weight:600; font-size:14px; margin-bottom:4px; }
+    .place .meta { font-size:12px; color:#666; margin-bottom:8px; }
+    .btn { display:inline-block; padding:6px 8px; margin-right:6px; border-radius:4px; text-decoration:none; font-size:13px; cursor:pointer; }
+    .btn-center { background:#1976d2; color:white; }
+    .btn-open { background:#26a69a; color:white; }
+    .note { font-size:12px; color:#555; margin-bottom:10px; }
+    footer { font-size:12px; color:#666; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="sidebar">
+    <h1>Sites to Visit</h1>
+    <div class="note">Addresses below are to be visited for Constructor Information Collection.</div>
+    <div id="places"></div>
+    <footer>
+      <div>Tip: On mobile, "Open in Google Maps" will switch to the Maps app if installed.</div>
+    </footer>
+  </div>
+
+  <script>
+  const API_KEY = "AIzaSyCxwoR9NMTjxa2Oq7InCcefIBHhrIWHP88";
+  const ADDRESSES = [
+    "1600 Amphitheatre Parkway, Mountain View, CA",
+    "1 Infinite Loop, Cupertino, CA",
+    "26 Cabarita Rd, Concord NSW 2137, Australia"
+  ];
+
+  let map;
+  let geocoder;
+  const markers = [];
+  const placesEl = document.getElementById("places");
+
+  function handleError(err) {
+    console.error(err);
+    placesEl.innerHTML = `<div class="note" style="color:#b00020">Error: ${escapeHtml(err.message || String(err))}</div>`;
+  }
+
+  (function loadGoogleMaps() {
+    const script = document.createElement("script");
+    script.defer = script.async = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(API_KEY)}`;
+    script.onload = () => init().catch(handleError);
+    script.onerror = () => handleError(new Error("Failed to load Google Maps JavaScript API."));
+    document.head.appendChild(script);
+  })();
+
+  async function init() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 20, lng: 0 },
+      zoom: 2,
+      mapTypeId: "roadmap"
+    });
+    geocoder = new google.maps.Geocoder();
+
+    for (const address of ADDRESSES) {
+      const geo = await geocodeStrict(address);
+      addPlace(address, geo.lat, geo.lng);
+      await delay(250);
+    }
+
+    fitToMarkers();
+  }
+
+  function geocodeStrict(address) {
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === "OK" && results && results[0]) {
+          const loc = results[0].geometry.location;
+          resolve({ lat: loc.lat(), lng: loc.lng(), formatted: results[0].formatted_address });
+        } else {
+          reject(new Error(`Geocoding failed for "${address}" (${status}).`));
+        }
+      });
+    });
+  }
+
+  function addPlace(address, lat, lng) {
+    const index = markers.length;
+    const card = document.createElement("div");
+    card.className = "place";
+    card.innerHTML = `<div class="title">${escapeHtml(address)}</div>`;
+
+    const centerBtn = document.createElement("button");
+    centerBtn.className = "btn btn-center";
+    centerBtn.textContent = "Center";
+    centerBtn.onclick = () => {
+    map.panTo({ lat, lng });
+    map.setZoom(16);
+    markers[index].info.open(map, markers[index]);
+    };
+
+    const mapsBtn = document.createElement("button");
+    mapsBtn.className = "btn btn-open";
+    mapsBtn.textContent = "Open in Google Maps";
+    mapsBtn.onclick = () => {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+      window.open(url, "_blank");
+    };
+
+    card.appendChild(centerBtn);
+    card.appendChild(mapsBtn);
+    placesEl.appendChild(card);
+
+    const marker = new google.maps.Marker({
+      position: { lat, lng },
+      map,
+      title: address,
+      icon: {
+        url: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2_hdpi.png",
+        scaledSize: new google.maps.Size(27, 43),
+        anchor: new google.maps.Point(13, 43)
+      }
+    });
+    const info = new google.maps.InfoWindow({
+      content: `<strong>${escapeHtml(address)}</strong>`
+    });
+    marker.addListener("click", () => info.open(map, marker));
+    marker.info = info;
+    markers.push(marker);
+  }
+
+  function fitToMarkers() {
+    if (!markers.length) return;
+    if (markers.length === 1) {
+      map.setCenter(markers[0].getPosition());
+      map.setZoom(16);
+      return;
+    }
+    const bounds = new google.maps.LatLngBounds();
+    markers.forEach(marker => bounds.extend(marker.getPosition()));
+    map.fitBounds(bounds, 50);
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function escapeHtml(value) {
+    return (value || "").replace(/[&<>"']/g, match => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    })[match]);
+  }
+  </script>
+</body>
+</html>
