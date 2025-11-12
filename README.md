@@ -21,11 +21,49 @@ To use this application, you'll need a Google Maps API key:
 2. Create a new project or select an existing one
 3. Enable the **Maps JavaScript API** for your project
 4. Create credentials (API key) for your project
-5. (Optional but recommended) Restrict your API key to your domain for security
+5. **Restrict your API key** (see Security section below)
 
 For detailed instructions, visit: [Get an API Key](https://developers.google.com/maps/documentation/javascript/get-api-key)
 
 **Note:** You may need to enable billing on your Google Cloud project, though Google provides $200 free credit per month, which is more than enough for most personal projects.
+
+#### API Key Security
+
+**Important:** Yes, an API key is required and will be visible in your client-side code. However, you can protect it from misuse:
+
+**Recommended Security Measures:**
+
+1. **HTTP Referrer Restrictions** (Most Important)
+   - In Google Cloud Console, go to your API key settings
+   - Under "Application restrictions", select "HTTP referrers (web sites)"
+   - Add your domain(s), for example:
+     - `https://yourdomain.github.io/*` (for GitHub Pages)
+     - `https://www.yourdomain.com/*` (for custom domain)
+     - `http://localhost:*` (for local testing)
+   - This prevents the key from working on other websites
+
+2. **API Restrictions**
+   - Under "API restrictions", select "Restrict key"
+   - Only allow "Maps JavaScript API"
+   - This prevents the key from being used for other Google services
+
+3. **Usage Quotas**
+   - Set daily quotas in Google Cloud Console
+   - Configure alerts for unusual usage patterns
+   - Google provides $200 free credit/month, covering ~28,000 map loads
+
+4. **Monitor Usage**
+   - Regularly check the Google Cloud Console for usage metrics
+   - Enable billing alerts
+   - Review the "APIs & Services" dashboard
+
+**Why this is safe enough:**
+- With referrer restrictions, even if someone copies your key, it won't work on their website
+- The $200 free credit provides a safety buffer
+- You'll be alerted before charges occur
+- Client-side API keys are the standard approach for Google Maps - millions of websites use this method
+
+**Learn more:** [API Key Best Practices](https://developers.google.com/maps/api-security-best-practices)
 
 ### 2. Configure the Application
 

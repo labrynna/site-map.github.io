@@ -47,6 +47,7 @@
   <script>
   // CONFIGURATION: Replace with your own Google Maps API key
   // Get your API key from: https://developers.google.com/maps/documentation/javascript/get-api-key
+  // SECURITY: Restrict your API key to your domain in Google Cloud Console to prevent misuse
   const API_KEY = "YOUR_API_KEY_HERE";
 
   let map;
@@ -66,8 +67,9 @@
         To display the map, you need to:<br>
         1. Get a free Google Maps API key from: <a href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="_blank" style="color:#1976d2;">Google Maps Platform</a><br>
         2. Replace "YOUR_API_KEY_HERE" in the index.html file with your actual API key<br>
-        3. Enable the "Maps JavaScript API" for your project<br><br>
-        <small>Note: You may need to enable billing on your Google Cloud project, though Google provides $200 free credit per month.</small>
+        3. Enable the "Maps JavaScript API" for your project<br>
+        4. <strong>Restrict your API key</strong> to your domain (e.g., *.github.io/*) in Google Cloud Console to prevent misuse<br><br>
+        <small>Note: You may need to enable billing on your Google Cloud project, though Google provides $200 free credit per month. With domain restrictions, your key is safe even though it's visible in the code.</small>
       </div>`;
     }
     placesEl.innerHTML = displayMessage;
