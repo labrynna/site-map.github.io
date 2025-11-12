@@ -260,7 +260,9 @@
         
         try {
           // Send POST request to webhook
-          await fetch('https://insaight.app.n8n.cloud/webhook-test/site-map', {
+          // Prduction Webhook-Link: https://insaight.app.n8n.cloud/webhook/site-map
+          // test Webhook-Link: https://insaight.app.n8n.cloud/webhook-test/site-map
+          await fetch('https://insaight.app.n8n.cloud/webhook/site-map', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
