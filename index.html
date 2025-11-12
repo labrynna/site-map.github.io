@@ -158,7 +158,7 @@
     mapsBtn.className = "btn btn-open";
     mapsBtn.textContent = "Open in Google Maps";
     mapsBtn.onclick = () => {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
       window.open(url, "_blank");
     };
 
