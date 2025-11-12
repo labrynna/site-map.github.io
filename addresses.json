@@ -1,38 +1,26 @@
 [
   {
-    "address": "26 Cabarita Rd, Concord NSW 2137, Australia",
-    "latitude": -33.8514731,
-    "longitude": 151.1081675,
-    "visited": "No"
+    "address": "11 Watson St, Putney NSW 2112, Australia",
+    "latitude": -33.8247193,
+    "longitude": 151.1021442,
+    "visited": "undefined"
   },
   {
-    "address": "48 Topham Rd, Smeaton Grange NSW 2567, Australia",
-    "latitude": -34.035398,
-    "longitude": 150.753535,
-    "visited": "No"
+    "address": "PO Box 4139 Denistone East 2112",
+    "latitude": -33.7935234,
+    "longitude": 151.0957879,
+    "visited": "undefined"
   },
   {
     "address": "11 Watson St, Putney NSW 2112, Australia",
     "latitude": -33.8247193,
     "longitude": 151.1021442,
-    "visited": "No"
+    "visited": "undefined"
   },
   {
-    "address": "79 St Hilliers Rd, Auburn NSW 2144, Australia",
-    "latitude": -33.8478548,
-    "longitude": 151.0402748,
-    "visited": "No"
-  },
-  {
-    "address": "Suite 902C Level 9, waterside shopping Centre, 1 Rider Blvd, Rhodes NSW 2138, Australia",
-    "latitude": -33.835377,
-    "longitude": 151.0851286,
-    "visited": "Yes"
-  },
-  {
-    "address": "Unit 11/23A Mars Rd, Lane Cove West NSW 2066, Australia",
-    "latitude": -33.8087828,
-    "longitude": 151.1507867,
-    "visited": "Yes"
+    "address": "PO Box 4139 Denistone East 2112",
+    "latitude": -33.7935234,
+    "longitude": 151.0957879,
+    "visited": "undefined"
   }
 ]
