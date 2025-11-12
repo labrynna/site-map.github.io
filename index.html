@@ -109,6 +109,16 @@
     }
     const addresses = await response.json();
 
+    // Validate that addresses is an array
+    if (!Array.isArray(addresses)) {
+      throw new Error('addresses.json must contain an array of location objects. Current format is invalid.');
+    }
+
+    // Validate that we have at least some data
+    if (addresses.length === 0) {
+      throw new Error('No addresses found in addresses.json');
+    }
+
     for (const location of addresses) {
       addPlace(location.address, location.latitude, location.longitude, location.visited);
     }
