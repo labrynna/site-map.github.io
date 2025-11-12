@@ -17,6 +17,12 @@
     .btn-open { background:#26a69a; color:white; }
     .note { font-size:12px; color:#555; margin-bottom:10px; }
     footer { font-size:12px; color:#666; margin-top:8px; }
+    .filter-section { margin-bottom:16px; padding:10px; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .filter-section label { display:block; margin-bottom:6px; font-size:13px; font-weight:600; }
+    .filter-options { display:flex; gap:8px; }
+    .filter-btn { flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; background:#fff; font-size:12px; cursor:pointer; transition: all 0.2s; }
+    .filter-btn:hover { background:#f5f5f5; }
+    .filter-btn.active { background:#1976d2; color:white; border-color:#1976d2; }
   </style>
 </head>
 <body>
@@ -24,6 +30,14 @@
   <div id="sidebar">
     <h1>Sites to Visit</h1>
     <div class="note">Addresses below are to be visited for Constructor Information Collection.</div>
+    <div class="filter-section">
+      <label>Filter:</label>
+      <div class="filter-options">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="not-visited">Not Visited</button>
+        <button class="filter-btn" data-filter="visited">Visited</button>
+      </div>
+    </div>
     <div id="places"></div>
     <footer>
       <div>Tip: On mobile, "Open in Google Maps" will switch to the Maps app if installed.</div>
@@ -36,6 +50,7 @@
   let map;
   const markers = [];
   const placesEl = document.getElementById("places");
+  let currentFilter = "all";
 
   function handleError(err) {
     console.error(err);
@@ -70,12 +85,14 @@
     }
 
     fitToMarkers();
+    setupFilterButtons();
   }
 
   function addPlace(address, lat, lng, visited) {
     const index = markers.length;
     const card = document.createElement("div");
     card.className = "place";
+    card.dataset.visited = visited; // Store visited status for filtering
     const visitedLabel = visited === "Yes" ? "✓ Visited" : "○ Not Visited";
     const visitedColor = visited === "Yes" ? "#2e7d32" : "#d32f2f";
     card.innerHTML = `
@@ -122,6 +139,7 @@
     });
     marker.addListener("click", () => info.open(map, marker));
     marker.info = info;
+    marker.visited = visited; // Store visited status for filtering
     markers.push(marker);
   }
 
@@ -145,6 +163,45 @@
       "\"": "&quot;",
       "'": "&#39;"
     })[match]);
+  }
+
+  function setupFilterButtons() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active button
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Apply filter
+        const filter = btn.dataset.filter;
+        currentFilter = filter;
+        applyFilter(filter);
+      });
+    });
+  }
+
+  function applyFilter(filter) {
+    const places = document.querySelectorAll('.place');
+    
+    places.forEach((place, index) => {
+      const visited = place.dataset.visited;
+      let shouldShow = true;
+      
+      if (filter === 'visited') {
+        shouldShow = visited === 'Yes';
+      } else if (filter === 'not-visited') {
+        shouldShow = visited === 'No';
+      }
+      
+      // Show/hide place card
+      place.style.display = shouldShow ? 'block' : 'none';
+      
+      // Show/hide corresponding marker
+      if (markers[index]) {
+        markers[index].setVisible(shouldShow);
+      }
+    });
   }
   </script>
 </body>
