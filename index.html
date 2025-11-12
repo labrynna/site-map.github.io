@@ -107,8 +107,9 @@
       mapTypeId: "roadmap"
     });
 
-    // Load addresses from JSON file
-    const response = await fetch('addresses.json');
+    // Load addresses from JSON file with cache-busting to ensure fresh data
+    const cacheBuster = new Date().getTime();
+    const response = await fetch(`addresses.json?v=${cacheBuster}`);
     if (!response.ok) {
       throw new Error('Failed to load addresses.json');
     }
