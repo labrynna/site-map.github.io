@@ -23,12 +23,17 @@
     .filter-btn { flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; background:#fff; font-size:12px; cursor:pointer; transition: all 0.2s; }
     .filter-btn:hover { background:#f5f5f5; }
     .filter-btn.active { background:#1976d2; color:white; border-color:#1976d2; }
+    .update-map-btn { width:100%; padding:12px; margin-bottom:16px; background:#4caf50; color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; }
+    .update-map-btn:hover { background:#45a049; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
+    .update-map-btn:active { transform: scale(0.98); }
+    .update-map-btn:disabled { background:#ccc; cursor:not-allowed; }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div id="sidebar">
     <h1>Sites to Visit</h1>
+    <button class="update-map-btn" id="updateMapBtn">Update Map</button>
     <div class="note">Addresses below are to be visited for Constructor Information Collection.</div>
     <div class="filter-section">
       <label>Filter:</label>
@@ -242,6 +247,48 @@
       }
     });
   }
+
+  // Setup Update Map button
+  document.addEventListener('DOMContentLoaded', () => {
+    const updateMapBtn = document.getElementById('updateMapBtn');
+    if (updateMapBtn) {
+      updateMapBtn.addEventListener('click', async () => {
+        // Disable button during request
+        updateMapBtn.disabled = true;
+        updateMapBtn.textContent = 'Updating...';
+        
+        try {
+          // Send POST request to webhook
+          await fetch('https://insaight.app.n8n.cloud/webhook-test/site-map', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              timestamp: new Date().toISOString()
+            })
+          });
+          
+          // Change button text to show success
+          updateMapBtn.textContent = 'Update triggered! Refreshing...';
+          
+          // Refresh page after 5 seconds
+          setTimeout(() => {
+            window.location.reload();
+          }, 5000);
+        } catch (error) {
+          console.error('Error triggering update:', error);
+          updateMapBtn.textContent = 'Error! Try again';
+          updateMapBtn.disabled = false;
+          
+          // Re-enable button after 3 seconds if there was an error
+          setTimeout(() => {
+            updateMapBtn.textContent = 'Update Map';
+          }, 3000);
+        }
+      });
+    }
+  });
   </script>
 </body>
 </html>
