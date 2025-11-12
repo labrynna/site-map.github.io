@@ -45,7 +45,9 @@
   </div>
 
   <script>
-  const API_KEY = "AIzaSyCxwoR9NMTjxa2Oq7InCcefIBHhrIWHP88";
+  // CONFIGURATION: Replace with your own Google Maps API key
+  // Get your API key from: https://developers.google.com/maps/documentation/javascript/get-api-key
+  const API_KEY = "YOUR_API_KEY_HERE";
 
   let map;
   const markers = [];
@@ -54,15 +56,40 @@
 
   function handleError(err) {
     console.error(err);
-    placesEl.innerHTML = `<div class="note" style="color:#b00020">Error: ${escapeHtml(err.message || String(err))}</div>`;
+    const errorMessage = err.message || String(err);
+    let displayMessage = `Error: ${escapeHtml(errorMessage)}`;
+    
+    // Provide helpful message for API key issues
+    if (API_KEY === "YOUR_API_KEY_HERE" || !API_KEY) {
+      displayMessage = `<div class="note" style="color:#b00020; padding:12px; background:#ffebee; border-radius:4px; margin-bottom:12px;">
+        <strong>⚠️ Google Maps API Key Required</strong><br><br>
+        To display the map, you need to:<br>
+        1. Get a free Google Maps API key from: <a href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="_blank" style="color:#1976d2;">Google Maps Platform</a><br>
+        2. Replace "YOUR_API_KEY_HERE" in the index.html file with your actual API key<br>
+        3. Enable the "Maps JavaScript API" for your project<br><br>
+        <small>Note: You may need to enable billing on your Google Cloud project, though Google provides $200 free credit per month.</small>
+      </div>`;
+    }
+    placesEl.innerHTML = displayMessage;
   }
 
+  // Use the recommended callback-based approach for loading Google Maps API
+  window.initMap = function() {
+    init().catch(handleError);
+  };
+
   (function loadGoogleMaps() {
+    // Check if API key is configured
+    if (API_KEY === "YOUR_API_KEY_HERE" || !API_KEY) {
+      handleError(new Error("Google Maps API key not configured"));
+      return;
+    }
+    
     const script = document.createElement("script");
-    script.defer = script.async = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(API_KEY)}`;
-    script.onload = () => init().catch(handleError);
-    script.onerror = () => handleError(new Error("Failed to load Google Maps JavaScript API."));
+    script.defer = true;
+    script.async = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(API_KEY)}&callback=initMap`;
+    script.onerror = () => handleError(new Error("Failed to load Google Maps JavaScript API. Please check your API key and ensure the Maps JavaScript API is enabled in your Google Cloud Console."));
     document.head.appendChild(script);
   })();
 
