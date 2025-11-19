@@ -1,12 +1,11 @@
 /**
- * Netlify Function to fetch data from Google Sheets and update addresses.json
- * This function authenticates with Google Sheets using service account credentials
- * stored securely in Netlify environment variables.
+ * Netlify Function to fetch data from Google Sheets
+ * This function supports two authentication methods:
+ * 1. Service Account (recommended for private sheets)
+ * 2. API Key (requires publicly accessible sheets)
  */
 
 const { google } = require('googleapis');
-const fs = require('fs');
-const path = require('path');
 
 exports.handler = async (event, context) => {
   // Only allow POST requests
@@ -18,33 +17,63 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Get credentials from environment variables
-    const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || '{}');
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-    const sheetName = process.env.GOOGLE_SHEETS_RANGE || 'Sheet1!A:D'; // Default range
+    const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
+    
+    // Sheet range is optional - if not specified, will fetch all data
+    // If specified, can be like "Sheet1" or "Sheet1!A:D"
+    const sheetRange = process.env.GOOGLE_SHEETS_RANGE || 'Sheet1';
 
-    if (!credentials.client_email || !credentials.private_key || !spreadsheetId) {
+    if (!spreadsheetId) {
       return {
         statusCode: 500,
         body: JSON.stringify({ 
           error: 'Missing Google Sheets configuration',
-          message: 'Please ensure GOOGLE_SHEETS_CREDENTIALS and GOOGLE_SHEETS_ID are set in Netlify environment variables'
+          message: 'Please set GOOGLE_SHEETS_ID in Netlify environment variables'
         })
       };
     }
 
-    // Initialize Google Sheets API with service account
-    const auth = new google.auth.GoogleAuth({
-      credentials: credentials,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    });
+    let sheets;
+    
+    // Try service account first (more secure, works with private sheets)
+    if (credentialsJson) {
+      try {
+        const credentials = JSON.parse(credentialsJson);
+        if (credentials.client_email && credentials.private_key) {
+          const auth = new google.auth.GoogleAuth({
+            credentials: credentials,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+          });
+          sheets = google.sheets({ version: 'v4', auth });
+        }
+      } catch (parseError) {
+        console.error('Failed to parse service account credentials:', parseError);
+      }
+    }
+    
+    // Fallback to API key (requires public sheet)
+    if (!sheets && apiKey) {
+      sheets = google.sheets({ version: 'v4', auth: apiKey });
+    }
+    
+    // If neither authentication method is available
+    if (!sheets) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ 
+          error: 'Missing authentication',
+          message: 'Please set either GOOGLE_SHEETS_API_KEY or GOOGLE_SHEETS_CREDENTIALS in Netlify environment variables'
+        })
+      };
+    }
 
-    const sheets = google.sheets({ version: 'v4', auth });
 
     // Fetch data from Google Sheets
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: spreadsheetId,
-      range: sheetName,
+      range: sheetRange,
     });
 
     const rows = response.data.values;
@@ -56,30 +85,50 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Convert rows to addresses format (skip header row if present)
-    const hasHeader = rows[0] && (
-      rows[0][0]?.toLowerCase().includes('address') || 
-      rows[0][0]?.toLowerCase().includes('location')
-    );
+    // Automatically detect column mapping from header row
+    const headerRow = rows[0];
+    const columnMapping = {};
     
-    const dataRows = hasHeader ? rows.slice(1) : rows;
+    // Find columns by header names (case-insensitive)
+    headerRow.forEach((header, index) => {
+      const normalizedHeader = (header || '').toLowerCase().trim();
+      if (normalizedHeader.includes('address') || normalizedHeader.includes('location')) {
+        columnMapping.address = index;
+      } else if (normalizedHeader.includes('lat')) {
+        columnMapping.latitude = index;
+      } else if (normalizedHeader.includes('long') || normalizedHeader.includes('lng')) {
+        columnMapping.longitude = index;
+      } else if (normalizedHeader.includes('visit')) {
+        columnMapping.visited = index;
+      }
+    });
+
+    // If no headers found, assume standard column order: Address, Latitude, Longitude, Visited
+    const useHeaderMapping = Object.keys(columnMapping).length >= 3;
+    const dataRows = useHeaderMapping ? rows.slice(1) : rows;
 
     const addresses = dataRows
-      .filter(row => row.length >= 3) // Must have at least address, lat, lng
-      .map(row => ({
-        address: row[0] || '',
-        latitude: parseFloat(row[1]) || 0,
-        longitude: parseFloat(row[2]) || 0,
-        visited: row[3] || 'No'
-      }));
+      .filter(row => row.length >= 3) // Must have at least 3 columns
+      .map(row => {
+        if (useHeaderMapping) {
+          return {
+            address: row[columnMapping.address] || '',
+            latitude: parseFloat(row[columnMapping.latitude]) || 0,
+            longitude: parseFloat(row[columnMapping.longitude]) || 0,
+            visited: row[columnMapping.visited] || 'No'
+          };
+        } else {
+          // Fallback to column order: Address, Latitude, Longitude, Visited
+          return {
+            address: row[0] || '',
+            latitude: parseFloat(row[1]) || 0,
+            longitude: parseFloat(row[2]) || 0,
+            visited: row[3] || 'No'
+          };
+        }
+      });
 
-    // In Netlify Functions, we can't write directly to the file system in a persistent way
-    // Instead, we return the data and the client will handle it
-    // For persistent storage, you would need to use:
-    // - Netlify Blobs
-    // - GitHub API to commit the file
-    // - Or another external storage solution
-
+    // Return the data
     return {
       statusCode: 200,
       headers: {
@@ -90,7 +139,8 @@ exports.handler = async (event, context) => {
         success: true,
         data: addresses,
         timestamp: new Date().toISOString(),
-        message: 'Data fetched successfully from Google Sheets'
+        message: 'Data fetched successfully from Google Sheets',
+        detectedHeaders: useHeaderMapping
       })
     };
 
