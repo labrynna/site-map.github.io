@@ -244,7 +244,7 @@ https://docs.google.com/spreadsheets/d/COPY_THIS_PART/edit
 **How it works:**
 
 The function automatically detects columns based on header names in your first row:
-- Headers containing "address" or "location" → Address column
+- Headers containing "Address" or "location" → Address column
 - Headers containing "lat" or "latitude" → Latitude column  
 - Headers containing "long", "lng", or "longitude" → Longitude column
 - Headers containing "picture taken" → Visited status column
@@ -421,7 +421,7 @@ You would then create additional Netlify Functions that use the same credentials
 
 **No data showing / Column detection issues:**
 - Check that your first row contains headers
-- Headers should include keywords: "address", "lat", "long", "picture taken"
+- Headers should include keywords: "Address", "lat", "long", "picture taken"
 - If no headers, ensure data is in order: Address, Latitude, Longitude, Picture taken
 - Try setting `GOOGLE_SHEETS_RANGE` to your specific sheet name
 

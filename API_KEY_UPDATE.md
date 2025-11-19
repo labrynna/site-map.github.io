@@ -50,7 +50,7 @@ The function automatically detects columns based on header keywords in your firs
 
 | Header Contains | Detected As |
 |----------------|-------------|
-| "address" or "location" | Address column |
+| "Address" or "location" | Address column |
 | "lat" or "latitude" | Latitude column |
 | "long", "lng", or "longitude" | Longitude column |
 | "picture taken" | Visited status column |
@@ -120,7 +120,7 @@ The function will automatically:
 ## Your Spreadsheet Format
 
 Make sure your first row has headers containing these keywords:
-- Something with "address" or "location"
+- Something with "Address" or "location"
 - Something with "lat" or "latitude"
 - Something with "long", "lng", or "longitude"
 - Something with "picture taken"

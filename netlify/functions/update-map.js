@@ -92,7 +92,8 @@ exports.handler = async (event, context) => {
     // Find columns by header names (case-insensitive)
     headerRow.forEach((header, index) => {
       const normalizedHeader = (header || '').toLowerCase().trim();
-      if (normalizedHeader.includes('address') || normalizedHeader.includes('location')) {
+      const originalHeader = (header || '').trim();
+      if (originalHeader.includes('Address') || normalizedHeader.includes('address') || normalizedHeader.includes('location')) {
         columnMapping.address = index;
       } else if (normalizedHeader.includes('lat')) {
         columnMapping.latitude = index;
