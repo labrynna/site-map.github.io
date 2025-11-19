@@ -6,8 +6,11 @@
   <title>Site Visit Map</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; margin:0; display:flex; height:100vh; }
-    #map { flex:1; min-width: 0; } /* map takes remaining space */
-    #sidebar { width:360px; max-width:40%; overflow:auto; border-left:1px solid #ddd; padding:12px; box-sizing:border-box; background:#fafafa; }
+    #map { flex:1; min-width: 0; transition: all 0.3s ease; } /* map takes remaining space */
+    #map.hidden { display: none; }
+    body.map-hidden { justify-content: center; }
+    body.map-hidden #sidebar { width: 100%; max-width: 800px; border-left: none; border: 1px solid #ddd; }
+    #sidebar { width:360px; max-width:40%; overflow:auto; border-left:1px solid #ddd; padding:12px; box-sizing:border-box; background:#fafafa; transition: all 0.3s ease; }
     h1 { font-size:18px; margin:0 0 12px 0; }
     .place { padding:8px; margin-bottom:8px; border-radius:6px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
     .place .title { font-weight:600; font-size:14px; margin-bottom:4px; }
@@ -27,6 +30,9 @@
     .update-map-btn:hover { background:#45a049; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
     .update-map-btn:active { transform: scale(0.98); }
     .update-map-btn:disabled { background:#ccc; cursor:not-allowed; }
+    .toggle-map-btn { width:100%; padding:12px; margin-bottom:16px; background:#ff9800; color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; }
+    .toggle-map-btn:hover { background:#f57c00; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
+    .toggle-map-btn:active { transform: scale(0.98); }
   </style>
 </head>
 <body>
@@ -34,6 +40,7 @@
   <div id="sidebar">
     <h1>Sites to Visit</h1>
     <button class="update-map-btn" id="updateMapBtn">Update Map</button>
+    <button class="toggle-map-btn" id="toggleMapBtn">Hide Map</button>
     <div class="note">Addresses below are to be visited for Constructor Information Collection.</div>
     <div class="filter-section">
       <label>Filter:</label>
@@ -173,8 +180,21 @@
     const card = document.createElement("div");
     card.className = "place";
     card.dataset.visited = visited; // Store visited status for filtering
-    const visitedLabel = visited === "Yes" ? "✓ Visited" : "○ Not Visited";
-    const visitedColor = visited === "Yes" ? "#2e7d32" : "#d32f2f";
+    
+    // Determine label and color based on visited status
+    let visitedLabel, visitedColor;
+    if (visited === "Yes") {
+      visitedLabel = "✓ Visited";
+      visitedColor = "#2e7d32";
+    } else if (visited === "No") {
+      visitedLabel = "○ Not Visited";
+      visitedColor = "#d32f2f";
+    } else {
+      // For empty/undefined/other values
+      visitedLabel = "⊙ Status Unknown";
+      visitedColor = "#f57c00";
+    }
+    
     card.innerHTML = `
       <div class="title">${escapeHtml(address)}</div>
       <div class="meta" style="color:${visitedColor};">${visitedLabel}</div>
@@ -202,7 +222,20 @@
     placesEl.appendChild(card);
 
     // Set marker color based on visited status
-    const markerColor = visited === "Yes" ? "green" : "red";
+    let markerColor, infoLabel, infoColor;
+    if (visited === "Yes") {
+      markerColor = "green";
+      infoLabel = "✓ Visited";
+      infoColor = "#2e7d32";
+    } else if (visited === "No") {
+      markerColor = "red";
+      infoLabel = "○ Not Visited";
+      infoColor = "#d32f2f";
+    } else {
+      markerColor = "yellow";
+      infoLabel = "⊙ Status Unknown";
+      infoColor = "#f57c00";
+    }
     const iconUrl = `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`;
 
     const marker = new google.maps.Marker({
@@ -215,7 +248,7 @@
       }
     });
     const info = new google.maps.InfoWindow({
-      content: `<strong>${escapeHtml(address)}</strong><br><span style="color:${visited === "Yes" ? "#2e7d32" : "#d32f2f"};">${visited === "Yes" ? "✓ Visited" : "○ Not Visited"}</span>`
+      content: `<strong>${escapeHtml(address)}</strong><br><span style="color:${infoColor};">${infoLabel}</span>`
     });
     marker.addListener("click", () => info.open(map, marker));
     marker.info = info;
@@ -272,6 +305,9 @@
         shouldShow = visited === 'Yes';
       } else if (filter === 'not-visited') {
         shouldShow = visited === 'No';
+      } else {
+        // filter === 'all', show everything including unknown status
+        shouldShow = true;
       }
       
       // Show/hide place card
@@ -294,6 +330,35 @@
         updateMapBtn.textContent = 'Updating...';
         
         try {
+          // Call n8n webhook if configured (in parallel with Netlify function)
+          // Fetch the webhook URL from environment variable via Netlify function
+          const webhookPromise = fetch('/.netlify/functions/get-n8n-webhook')
+            .then(async (response) => {
+              if (response.ok) {
+                const data = await response.json();
+                if (data.webhookUrl) {
+                  // Call the n8n webhook
+                  return fetch(data.webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      timestamp: new Date().toISOString(),
+                      source: 'site-map-update-button'
+                    })
+                  }).catch(err => {
+                    console.warn('n8n webhook call failed:', err);
+                    // Don't throw - we want the map update to continue even if webhook fails
+                  });
+                }
+              }
+            })
+            .catch(err => {
+              console.warn('Could not fetch n8n webhook URL:', err);
+              // Don't throw - continue with map update
+            });
+          
           // Call Netlify Function to fetch data from Google Sheets
           const response = await fetch('/.netlify/functions/update-map', {
             method: 'POST',
@@ -327,6 +392,29 @@
           setTimeout(() => {
             updateMapBtn.textContent = 'Update Map';
           }, 3000);
+        }
+      });
+    }
+    
+    // Setup Toggle Map button
+    const toggleMapBtn = document.getElementById('toggleMapBtn');
+    const mapEl = document.getElementById('map');
+    let isMapVisible = true;
+    
+    if (toggleMapBtn && mapEl) {
+      toggleMapBtn.addEventListener('click', () => {
+        isMapVisible = !isMapVisible;
+        
+        if (isMapVisible) {
+          // Show map
+          mapEl.classList.remove('hidden');
+          document.body.classList.remove('map-hidden');
+          toggleMapBtn.textContent = 'Hide Map';
+        } else {
+          // Hide map
+          mapEl.classList.add('hidden');
+          document.body.classList.add('map-hidden');
+          toggleMapBtn.textContent = 'Show Map';
         }
       });
     }
