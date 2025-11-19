@@ -5,12 +5,18 @@ A web application for displaying and managing site visit locations on Google Map
 ## Features
 
 - Display multiple locations on an interactive Google Map
-- Color-coded markers (green for visited, red for not visited)
-- Filter locations by visit status
+- Color-coded markers:
+  - **Green** for visited locations (Picture taken = "Yes")
+  - **Red** for not visited locations (Picture taken = "No")
+  - **Yellow** for unknown status (Picture taken is empty or other value)
+- Filter locations by visit status (All, Not Visited, Visited)
+  - Yellow markers (unknown status) only appear when "All" filter is selected
+- **Hide/Show Map toggle** - Hide the map to view only the address list centered on the page
 - Click markers to see location details
 - Center map on specific locations
 - Open locations directly in Google Maps app
 - Automatic data synchronization from Google Sheets
+- **n8n workflow integration** - Optional webhook trigger when updating the map
 - Secure API key and credentials management via Netlify environment variables
 
 ## Deployment on Netlify
@@ -134,10 +140,17 @@ After deployment, you need to add environment variables:
 | `GOOGLE_SHEETS_ID` | Your spreadsheet ID | From Step 3 (from the Google Sheets URL) |
 | `GOOGLE_SHEETS_RANGE` | `Sheet1!A:D` (or your range) | Optional - adjust if your sheet has a different name or range |
 
+#### Optional Environment Variables:
+
+| Variable Name | Value | Where to Get It |
+|---------------|-------|-----------------|
+| `N8N_WEBHOOK_URL` | Your n8n workflow webhook URL | Optional - If you have an n8n workflow that should be triggered when "Update Map" is clicked |
+
 **Important Notes:**
 - For `GOOGLE_SHEETS_CREDENTIALS`: Copy the **entire content** of the JSON file (including the curly braces)
 - The JSON should be on a single line (Netlify will handle it correctly)
 - Example format: `{"type":"service_account","project_id":"...","private_key_id":"...","private_key":"...",...}`
+- For `N8N_WEBHOOK_URL`: If provided, this webhook will be called when the "Update Map" button is clicked (in addition to fetching data from Google Sheets)
 
 ### Step 6: Verify the Deployment
 
