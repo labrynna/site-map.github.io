@@ -1,0 +1,9 @@
+{
+  "name": "site-map-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Site Visit Map",
+  "private": true,
+  "dependencies": {
+    "googleapis": "^128.0.0"
+  }
+}
