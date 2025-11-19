@@ -53,19 +53,19 @@ The function automatically detects columns based on header keywords in your firs
 | "address" or "location" | Address column |
 | "lat" or "latitude" | Latitude column |
 | "long", "lng", or "longitude" | Longitude column |
-| "visit" or "visited" | Visited status column |
+| "picture taken" | Visited status column |
 
 **Example:**
 If your spreadsheet has headers like:
 ```
-| Location | Lat | Long | Status | Notes | Priority |
+| Location | Lat | Long | Picture taken | Notes | Priority |
 ```
 
 The function will automatically:
 - Find "Location" → Address
 - Find "Lat" → Latitude
 - Find "Long" → Longitude
-- Find "Status" → Visited
+- Find "Picture taken" → Visited status
 - Ignore "Notes" and "Priority"
 
 ### Sheet Range Now Optional
@@ -123,7 +123,7 @@ Make sure your first row has headers containing these keywords:
 - Something with "address" or "location"
 - Something with "lat" or "latitude"
 - Something with "long", "lng", or "longitude"
-- Something with "visit" or "visited"
+- Something with "picture taken"
 
 The columns can be in any order!
 

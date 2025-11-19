@@ -98,7 +98,7 @@ exports.handler = async (event, context) => {
         columnMapping.latitude = index;
       } else if (normalizedHeader.includes('long') || normalizedHeader.includes('lng')) {
         columnMapping.longitude = index;
-      } else if (normalizedHeader.includes('visit')) {
+      } else if (normalizedHeader.includes('picture taken')) {
         columnMapping.visited = index;
       }
     });

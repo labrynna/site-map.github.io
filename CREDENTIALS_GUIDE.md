@@ -247,7 +247,7 @@ The function automatically detects columns based on header names in your first r
 - Headers containing "address" or "location" → Address column
 - Headers containing "lat" or "latitude" → Latitude column  
 - Headers containing "long", "lng", or "longitude" → Longitude column
-- Headers containing "visit" or "visited" → Visited status column
+- Headers containing "picture taken" → Visited status column
 
 **This means you can:**
 - Put columns in any order
@@ -297,14 +297,14 @@ Sheet1                 - Reads all data from Sheet1 (default)
 
 **Example: Your spreadsheet has these headers:**
 ```
-| Location | Lat | Long | Status | Notes | Priority |
+| Location | Lat | Long | Picture taken | Notes | Priority |
 ```
 
 The function will automatically find:
 - "Location" → Address
 - "Lat" → Latitude
 - "Long" → Longitude
-- "Status" → Visited (if it contains "Yes" or "No")
+- "Picture taken" → Visited status (should contain "Yes" or "No")
 - "Notes" and "Priority" columns are ignored
 
 You don't need to specify the range at all!
@@ -421,8 +421,8 @@ You would then create additional Netlify Functions that use the same credentials
 
 **No data showing / Column detection issues:**
 - Check that your first row contains headers
-- Headers should include keywords: "address", "lat", "long", "visit"
-- If no headers, ensure data is in order: Address, Latitude, Longitude, Visited
+- Headers should include keywords: "address", "lat", "long", "picture taken"
+- If no headers, ensure data is in order: Address, Latitude, Longitude, Picture taken
 - Try setting `GOOGLE_SHEETS_RANGE` to your specific sheet name
 
 **JSON formatting issues (Service Account only):**
