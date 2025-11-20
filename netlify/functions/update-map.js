@@ -127,6 +127,20 @@ exports.handler = async (event, context) => {
             visited: row[3] || 'No'
           };
         }
+      })
+      .filter(location => {
+        // Filter out rows where address is empty
+        if (!location.address || location.address.trim() === '') {
+          return false;
+        }
+        
+        // Filter out rows where latitude or longitude is missing or zero
+        if (!location.latitude || location.latitude === 0 || 
+            !location.longitude || location.longitude === 0) {
+          return false;
+        }
+        
+        return true;
       });
 
     // Return the data
