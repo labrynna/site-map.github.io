@@ -342,75 +342,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     const updateMapBtn = document.getElementById('updateMapBtn');
     if (updateMapBtn) {
-      updateMapBtn.addEventListener('click', async () => {
-        // Disable button during request
-        updateMapBtn.disabled = true;
-        updateMapBtn.textContent = 'Updating...';
-        
-        try {
-          // Call n8n webhook if configured (in parallel with Netlify function)
-          // Fetch the webhook URL from environment variable via Netlify function
-          const webhookPromise = fetch('/.netlify/functions/get-n8n-webhook')
-            .then(async (response) => {
-              if (response.ok) {
-                const data = await response.json();
-                if (data.webhookUrl) {
-                  // Call the n8n webhook
-                  return fetch(data.webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      timestamp: new Date().toISOString(),
-                      source: 'site-map-update-button'
-                    })
-                  }).catch(err => {
-                    console.warn('n8n webhook call failed:', err);
-                    // Don't throw - we want the map update to continue even if webhook fails
-                  });
-                }
-              }
-            })
-            .catch(err => {
-              console.warn('Could not fetch n8n webhook URL:', err);
-              // Don't throw - continue with map update
-            });
-          
-          // Call Netlify Function to fetch data from Google Sheets
-          const response = await fetch('/.netlify/functions/update-map', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              timestamp: new Date().toISOString()
-            })
-          });
-          
-          if (!response.ok) {
-            throw new Error('Failed to update map data');
-          }
-          
-          const result = await response.json();
-          
-          // Change button text to show success
-          updateMapBtn.textContent = 'Update successful! Refreshing...';
-          
-          // Refresh page after 2 seconds to load new data
-          setTimeout(() => {
-            window.location.reload(true);
-          }, 2000);
-        } catch (error) {
-          console.error('Error triggering update:', error);
-          updateMapBtn.textContent = 'Error! Try again';
-          updateMapBtn.disabled = false;
-          
-          // Re-enable button after 3 seconds if there was an error
-          setTimeout(() => {
-            updateMapBtn.textContent = 'Update Map';
-          }, 3000);
-        }
+      updateMapBtn.addEventListener('click', () => {
+        // Simply reload the page
+        window.location.reload(true);
       });
     }
     
