@@ -352,6 +352,11 @@
     const suburbSelect = document.getElementById('suburbFilter');
     if (!suburbSelect) return;
     
+    // Clear existing options (except the default "All Suburbs" option)
+    while (suburbSelect.options.length > 1) {
+      suburbSelect.remove(1);
+    }
+    
     // Sort suburbs alphabetically using locale-specific comparison
     const sortedSuburbs = Array.from(allSuburbs).sort((a, b) => a.localeCompare(b));
     
