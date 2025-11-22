@@ -34,6 +34,10 @@
     .toggle-map-btn { width:100%; padding:12px; margin-bottom:16px; background:#ff9800; color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; }
     .toggle-map-btn:hover { background:#f57c00; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
     .toggle-map-btn:active { transform: scale(0.98); }
+    .add-site-btn { width:100%; padding:12px; margin-bottom:16px; background:#9c27b0; color:white; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; }
+    .add-site-btn:hover { background:#7b1fa2; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
+    .add-site-btn:active { transform: scale(0.98); }
+    .suburb-select { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; cursor:pointer; background:#fff; }
   </style>
 </head>
 <body>
@@ -42,14 +46,20 @@
     <h1>Sites to Visit</h1>
     <button class="update-map-btn" id="updateMapBtn">Update Map</button>
     <button class="toggle-map-btn" id="toggleMapBtn">Hide Map</button>
-    <div class="note">Addresses below are to be visited for Constructor Information Collection.</div>
+    <button class="add-site-btn" id="addSiteBtn">Add picture of a new site</button>
     <div class="filter-section">
-      <label>Filter:</label>
+      <label>Filter by Visit Status:</label>
       <div class="filter-options">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="not-visited">Not Visited</button>
         <button class="filter-btn" data-filter="visited">Visited</button>
       </div>
+    </div>
+    <div class="filter-section">
+      <label>Filter by Suburb:</label>
+      <select class="suburb-select" id="suburbFilter">
+        <option value="all">All Suburbs</option>
+      </select>
     </div>
     <div id="places"></div>
     <footer>
@@ -66,6 +76,8 @@
   const markers = [];
   const placesEl = document.getElementById("places");
   let currentFilter = "all";
+  let currentSuburbFilter = "all";
+  let allSuburbs = new Set();
 
   function handleError(err) {
     console.error(err);
@@ -187,18 +199,27 @@
     });
 
     for (const location of filteredAddresses) {
-      addPlace(location.address, location.latitude, location.longitude, location.visited);
+      addPlace(location.address, location.latitude, location.longitude, location.visited, location.suburb);
+      // Add suburb to the set if it exists
+      if (location.suburb && location.suburb.trim() !== '') {
+        allSuburbs.add(location.suburb);
+      }
     }
+
+    // Populate suburb filter dropdown
+    populateSuburbFilter();
 
     fitToMarkers();
     setupFilterButtons();
+    setupSuburbFilter();
   }
 
-  function addPlace(address, lat, lng, visited) {
+  function addPlace(address, lat, lng, visited, suburb) {
     const index = markers.length;
     const card = document.createElement("div");
     card.className = "place";
     card.dataset.visited = visited; // Store visited status for filtering
+    card.dataset.suburb = suburb || ''; // Store suburb for filtering
     
     // Determine label and color based on visited status
     let visitedLabel, visitedColor;
@@ -285,6 +306,7 @@
     marker.addListener("click", () => info.open(map, marker));
     marker.info = info;
     marker.visited = visited; // Store visited status for filtering
+    marker.suburb = suburb || ''; // Store suburb for filtering
     markers.push(marker);
   }
 
@@ -321,25 +343,58 @@
         // Apply filter
         const filter = btn.dataset.filter;
         currentFilter = filter;
-        applyFilter(filter);
+        applyFilters();
       });
     });
   }
 
-  function applyFilter(filter) {
+  function populateSuburbFilter() {
+    const suburbSelect = document.getElementById('suburbFilter');
+    if (!suburbSelect) return;
+    
+    // Sort suburbs alphabetically
+    const sortedSuburbs = Array.from(allSuburbs).sort();
+    
+    // Add options for each suburb
+    sortedSuburbs.forEach(suburb => {
+      const option = document.createElement('option');
+      option.value = suburb;
+      option.textContent = suburb;
+      suburbSelect.appendChild(option);
+    });
+  }
+
+  function setupSuburbFilter() {
+    const suburbSelect = document.getElementById('suburbFilter');
+    if (!suburbSelect) return;
+    
+    suburbSelect.addEventListener('change', () => {
+      currentSuburbFilter = suburbSelect.value;
+      applyFilters();
+    });
+  }
+
+  function applyFilters() {
     const places = document.querySelectorAll('.place');
     
     places.forEach((place, index) => {
       const visited = place.dataset.visited;
+      const suburb = place.dataset.suburb;
       let shouldShow = true;
       
-      if (filter === 'visited') {
+      // Apply visited filter
+      if (currentFilter === 'visited') {
         shouldShow = visited === 'Yes';
-      } else if (filter === 'not-visited') {
+      } else if (currentFilter === 'not-visited') {
         shouldShow = visited === 'No';
       } else {
-        // filter === 'all', show everything including unknown status
+        // currentFilter === 'all', show everything including unknown status
         shouldShow = true;
+      }
+      
+      // Apply suburb filter (AND logic with visited filter)
+      if (shouldShow && currentSuburbFilter !== 'all') {
+        shouldShow = suburb === currentSuburbFilter;
       }
       
       // Show/hide place card
@@ -359,6 +414,14 @@
       updateMapBtn.addEventListener('click', () => {
         // Simply reload the page
         window.location.reload(true);
+      });
+    }
+    
+    // Setup Add Site button
+    const addSiteBtn = document.getElementById('addSiteBtn');
+    if (addSiteBtn) {
+      addSiteBtn.addEventListener('click', () => {
+        window.open('https://swd-carmen.netlify.app/', '_blank');
       });
     }
     

@@ -101,6 +101,8 @@ exports.handler = async (event, context) => {
         columnMapping.longitude = index;
       } else if (normalizedHeader.includes('picture taken')) {
         columnMapping.visited = index;
+      } else if (normalizedHeader.includes('suburb')) {
+        columnMapping.suburb = index;
       }
     });
 
@@ -116,15 +118,17 @@ exports.handler = async (event, context) => {
             address: row[columnMapping.address] || '',
             latitude: parseFloat(row[columnMapping.latitude]) || 0,
             longitude: parseFloat(row[columnMapping.longitude]) || 0,
-            visited: row[columnMapping.visited] || 'No'
+            visited: row[columnMapping.visited] || 'No',
+            suburb: row[columnMapping.suburb] || ''
           };
         } else {
-          // Fallback to column order: Address, Latitude, Longitude, Visited
+          // Fallback to column order: Address, Latitude, Longitude, Visited, Suburb
           return {
             address: row[0] || '',
             latitude: parseFloat(row[1]) || 0,
             longitude: parseFloat(row[2]) || 0,
-            visited: row[3] || 'No'
+            visited: row[3] || 'No',
+            suburb: row[4] || ''
           };
         }
       })
