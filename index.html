@@ -38,6 +38,8 @@
     .add-site-btn:hover { background:#7b1fa2; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
     .add-site-btn:active { transform: scale(0.98); }
     .suburb-select { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; font-size:13px; cursor:pointer; background:#fff; }
+    .address-counter { margin-bottom:16px; padding:12px; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.04); text-align:center; font-size:14px; color:#555; }
+    .address-counter .count { font-size:20px; font-weight:bold; color:#1976d2; }
   </style>
 </head>
 <body>
@@ -60,6 +62,9 @@
       <select class="suburb-select" id="suburbFilter">
         <option value="all">All Suburbs</option>
       </select>
+    </div>
+    <div class="address-counter" id="addressCounter">
+      <span class="count" id="addressCount">0</span> Addresses shown
     </div>
     <div id="places"></div>
     <footer>
@@ -212,6 +217,9 @@
     fitToMarkers();
     setupFilterButtons();
     setupSuburbFilter();
+    
+    // Initialize the address counter with all addresses
+    updateAddressCounter(filteredAddresses.length);
   }
 
   function addPlace(address, lat, lng, visited, suburb) {
@@ -381,6 +389,7 @@
 
   function applyFilters() {
     const places = document.querySelectorAll('.place');
+    let visibleCount = 0;
     
     places.forEach((place, index) => {
       const visited = place.dataset.visited;
@@ -409,7 +418,22 @@
       if (markers[index]) {
         markers[index].setVisible(shouldShow);
       }
+      
+      // Count visible places
+      if (shouldShow) {
+        visibleCount++;
+      }
     });
+    
+    // Update the counter display
+    updateAddressCounter(visibleCount);
+  }
+
+  function updateAddressCounter(count) {
+    const countElement = document.getElementById('addressCount');
+    if (countElement) {
+      countElement.textContent = count;
+    }
   }
 
   // Setup Update Map button
